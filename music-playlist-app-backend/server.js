@@ -43,3 +43,26 @@ const storage = new GridFsStorage({
         };
     }
 });
+// Set up multer to handle file uploads
+const upload = multer({ storage });
+
+// Route to handle file uploads
+app.post('/api/upload', upload.single('audioFile'), (req,res) => {
+    if(!req.file){
+        return res.status(400).json({ error: 'No file uploaded'});
+
+    }
+    console.log('uploaded file:', req.file);
+    res.json({fileId: req.file.id});
+});
+// Playlist Model
+const PlaylistSchema = new mongoose.Schema({
+    name: {type: String, required: true},
+    songs: [{type: mongoose.Schema.Types.ObjectId, ref: 'Song'}],
+    playlistCode: {
+        type: String,
+        required: true,
+        unique: true,
+        default: () => shortid.generate ()
+    }
+});
