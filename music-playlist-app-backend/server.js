@@ -66,3 +66,42 @@ const PlaylistSchema = new mongoose.Schema({
         default: () => shortid.generate ()
     }
 });
+const Playlist = mongoose.model('Playlist', PlaylistSchema);
+
+// Song Model
+const Song = mongoose.model('Song', new mongoose.Schema({
+    title: { type: String, required: true },
+    artist: { type: String, required: true },
+    songcode: { type: String, required: true, unique: true },
+    album: String,
+    duration: { type: Number, required: true },
+    fileId: { type: mongoose.Schema
+                            .Types.ObjectId, ref: 'uploads.files' }
+    // Reference to GridFS file
+}));
+
+// Routes
+// Playlists
+app.get('/api/playlists', async (req, res) => {
+    try {
+        const playlists = await Playlist.find().populate('songs');
+        res.json(playlists);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.get('/api/songs/:songId/audio', async (req, res) => {
+    try {
+        const songId = req.params.songId;
+
+        // Ensure the songId is a valid ObjectId
+        if (!ObjectId.isValid(songId)) {
+            return res.status(404).json({ error: 'Invalid song ID' });
+        }
+
+        // Find the song in MongoDB
+        const song = await Song.findById(songId);
+        if (!song) {
+            return res.status(404).json({ error: 'Song not found' });
